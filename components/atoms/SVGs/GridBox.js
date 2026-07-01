@@ -16,6 +16,7 @@ const HelperContainer = styled.div`
   align-items: center;
   position: sticky;
   left: 0;
+  z-index: 1;
   margin-right: 8px;
 `;
 

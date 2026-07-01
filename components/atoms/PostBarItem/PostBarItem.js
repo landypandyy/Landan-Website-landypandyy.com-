@@ -1,13 +1,7 @@
 import React from "react";
 import styled from "styled-components";
-import Image from "next/image";
+import ImageWithSkeleton from "../ImageWithSkeleton/ImageWithSkeleton";
 import { GRID_BOX_WIDTH, GRID_BOX_HEIGHT } from "../../../styles/constants";
-const PostBarItemIMG = styled(Image)`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-`;
 
 const StyledDiv = styled.div`
   width: ${(props) => (props.width ? props.width : `${GRID_BOX_WIDTH}px`)};
@@ -21,7 +15,7 @@ const StyledDiv = styled.div`
   outline-offset: 0;
   padding: ${(props) => props.padding};
   margin: ${(props) => props.margin};
-  z-index: -1;
+  z-index: 0;
 `;
 
 const toImageDimension = (value, fallback) => {
@@ -47,12 +41,20 @@ const PostBarItem = (
       padding={padding}
       margin={margin}
     >
-      <PostBarItemIMG
+      <ImageWithSkeleton
         onClick={onClick}
         src={smallURL || defaultURL}
         width={imageWidth}
         height={imageHeight}
         loading="lazy"
+        sizes={`${imageWidth}px`}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          display: "block",
+          zIndex: 1,
+        }}
         alt=""
       />
     </StyledDiv>

@@ -29,7 +29,7 @@ export default function GridView({ children, feedView }) {
       minWidth={`${MIN_WINDOW_WITH}px`}
       rowGap={`${GRID_GAP}px`}
       columnGap={`${GRID_GAP}px`}
-      overflow={"scroll"}
+      overflow="hidden auto"
     >
       {children}
     </Grid>

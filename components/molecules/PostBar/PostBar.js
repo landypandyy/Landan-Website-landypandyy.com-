@@ -11,7 +11,9 @@ import {
 import { Link } from "react-scroll";
 import { useStateContext } from "../../../lib/context";
 import GridBox from "../../atoms/SVGs/GridBox";
+import { getFirstImageUrl } from "../../../lib/media";
 const StyledPostBar = styled.div`
+  position: sticky;
   z-index: ${Z_INDEXS.scrollBars};
   grid-row: ${(props) => (props.gridRow ? props.gridRow : 5)};
   overflow-y: scroll;
@@ -19,10 +21,12 @@ const StyledPostBar = styled.div`
   padding: ${(props) => (props.withFilter ? "10px 0 10px 0" : "10px 0px")};
   border-top: ${(props) => (props.withFilter ? null : "1px solid lightgrey")};
   border-bottom: 1px solid lightgrey;
-  position: sticky;
   top: ${(props) => props.topMobile};
+  width: 100%;
+  box-sizing: border-box;
   background-color: ${(props) =>
     props.darkMode ? props.theme.dark.body : props.theme.light.body};
+
   @media (min-width: ${MAX_WINDOW_WIDTH}px) {
     top: ${(props) => props.topDesktop};
     grid-row: ${(props) => props.gridRowDesktop};
@@ -52,7 +56,7 @@ const PostBar = ({
   const feedRefs = useRef([]);
   useEffect(() => {
     let feedToScroll = feedRefs.current.filter(
-      (value) => value.id === currentId
+      (value) => String(value.id) === String(currentId)
     );
     feedToScroll[0]?.scrollIntoView({
       block: "nearest",
@@ -95,10 +99,7 @@ const PostBar = ({
             />
 
             {posts?.map((item, idx) => {
-              const defaultURL =
-                item?.attributes?.Img?.data[0]?.attributes?.url;
-              const smallImgURL =
-                item?.attributes?.Img?.data[0]?.attributes?.formats?.small?.url;
+              const thumbnailURL = getFirstImageUrl(item, "thumbnail");
               return (
                 <Link
                   key={idx + item?.attributes?.Title}
@@ -110,12 +111,11 @@ const PostBar = ({
                   <PostBarItem
                     width={"50px"}
                     height={"50px"}
-                    defaultURL={defaultURL}
-                    smallURL={smallImgURL}
+                    defaultURL={thumbnailURL}
                     margin={"0 5px"}
                     id={item.id}
                     ref={addToRefs}
-                    active={item.id === currentId}
+                    active={String(item.id) === String(currentId)}
                   />
                 </Link>
               );

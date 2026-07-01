@@ -15,20 +15,11 @@ const StyledFilterListItem = styled.li`
     props.active
       ? "0 0.015em #101010, 0 -0.015em #101010, 0.01em 0 #101010, -0.01em 0 #101010"
       : null};
+  white-space: nowrap;
   &:hover {
     text-shadow: 0 0.015em #101010, 0 -0.015em #101010, 0.01em 0 #101010,
       -0.01em 0 #101010;
     cursor: pointer;
-  }
-  animation: LeftRight 0.5s linear 0.6s;
-  @keyframes LeftRight {
-    0%,
-    100% {
-      transform: translateX(0px);
-    }
-    50% {
-      transform: translateX(-60px);
-    }
   }
 `;
 

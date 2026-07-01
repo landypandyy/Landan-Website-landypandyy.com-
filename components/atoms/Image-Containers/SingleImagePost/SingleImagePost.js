@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import ImageWithSkeleton from "../../ImageWithSkeleton/ImageWithSkeleton";
 import {
   MARGIN_BETWEEN_POSTS,
   TRANSITION_TIMES,
@@ -20,22 +21,6 @@ const Container = styled.div`
   padding-top: ${(props) => `${props.paddingTop}%`};
 `;
 
-const FeedItemIMG = styled.img`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  /* 
-  width: 100%;
-  object-fit: contain; */
-  /* aspect-ratio: ${(props) => props.aspectRatio}; */
-  /* object-fit: contain;
-  grid-row: ${(props) => props.gridRow};
-  grid-column: ${(props) => props.gridColumn}; */
-`;
 function calcAspectRatio(aspectRatio) {
   const defaultRatio = "16/9";
   const ratiosArray = aspectRatio
@@ -55,16 +40,19 @@ const SingleImagePost = ({ src, post, id, gridColumn, gridRow }, ref) => {
   return (
     <Container
       gridColumn={gridColumn}
+      ref={ref}
+      id={id}
       darkMode={darkMode}
       paddingTop={calcAspectRatio(aspectRatio)}
       margin={"0 0 10px 0"}
     >
-      <FeedItemIMG
+      <ImageWithSkeleton
         src={src}
-        ref={ref}
-        id={id}
-        gridRow={gridRow}
-        // aspectRatio={aspectRatio ? aspectRatio : "16/9"}
+        fill
+        sizes="(max-width: 830px) 100vw, 830px"
+        quality={90}
+        style={{ objectFit: "contain", zIndex: 1 }}
+        alt={post?.Title || ""}
       />
     </Container>
   );

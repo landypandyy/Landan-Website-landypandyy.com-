@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useStateContext } from "../../../../lib/context";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -11,7 +11,10 @@ import {
   TRANSITION_TIMES,
   MARGIN_BETWEEN_POSTS,
 } from "../../../../styles/constants";
-import Image from "next/image";
+import ImageWithSkeleton from "../../ImageWithSkeleton/ImageWithSkeleton";
+import SkeletonBlock from "../../SkeletonParts/SkeletonBlock";
+import { getMediaUrl } from "../../../../lib/media";
+
 function calcAspectRatio(aspectRatio) {
   const defaultRatio = "16/9";
   const ratiosArray = aspectRatio
@@ -24,6 +27,7 @@ function calcAspectRatio(aspectRatio) {
   const paddingTop = (divided * 100).toFixed(2);
   return paddingTop;
 }
+
 const CarouselContainer = styled.div`
   display: flex;
   margin-top: ${MARGIN_BETWEEN_POSTS}px;
@@ -32,7 +36,6 @@ const CarouselContainer = styled.div`
     props.darkMode ? props.theme.dark.sidebar : props.theme.light.sidebar};
   width: 100%;
   transition: ease-in-out ${TRANSITION_TIMES.body}ms;
-  /* aspect-ratio: ${(props) => props.aspectRatio}; */
   padding-top: ${(props) => `${props.paddingTop}%`};
   position: relative;
   width: 100%;
@@ -54,9 +57,6 @@ const CarouselContainer = styled.div`
   & .swiper-pagination-bullet-active {
     background-color: yellow;
   }
-  /* @supports (aspect-ratio: auto) {
-    aspect-ratio: ${(props) => props.aspectRatio};
-  } */
 `;
 
 const VideoPlayer = styled.video`
@@ -67,85 +67,104 @@ const VideoPlayer = styled.video`
   width: calc(100% - 48px);
   height: calc(100% - 48px);
   object-fit: contain;
+  z-index: 1;
+  transition: opacity 200ms ease-in-out;
 `;
+
+const DeferredSlide = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+`;
+
+function CarouselVideo({ src }) {
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+  }, [src]);
+
+  return (
+    <>
+      {!loaded && <SkeletonBlock />}
+      <VideoPlayer
+        controls
+        preload="metadata"
+        playsInline
+        onCanPlay={() => setLoaded(true)}
+        style={{ opacity: loaded ? 1 : 0 }}
+      >
+        <source src={src} type="video/mp4" />
+      </VideoPlayer>
+    </>
+  );
+}
 
 const CarouselObj = ({ post, id }, ref) => {
   const { darkMode } = useStateContext();
   const imgData = post?.attributes?.Img?.data;
   const aspectRatio = post?.attributes?.aspectRatio;
+  const [activeIdx, setActiveIdx] = useState(0);
 
   const imageOrVideo = (item, idx) => {
-    if (item.attributes.ext === ".mp4") {
+    if (Math.abs(idx - activeIdx) > 1) {
       return (
-        <SwiperSlide key={`${id}-${idx}-video`}>
-          <VideoPlayer controls preload="metadata" playsInline>
-            <source src={item?.attributes?.url} type="video/mp4" />
-          </VideoPlayer>
-        </SwiperSlide>
-      );
-    } else {
-      return (
-        <SwiperSlide key={`${id}-${idx}-image`}>
-          <Image
-            loading="lazy"
-            fill
-            style={{ objectFit: "contain", maxHeight: "100%" }}
-            src={
-              item?.attributes?.formats?.medium?.url || item?.attributes?.url
-            }
-            alt={post?.attributes?.Title || ""}
-          />
+        <SwiperSlide key={`${id}-${idx}-deferred`} style={{ position: "relative" }}>
+          <DeferredSlide>
+            <SkeletonBlock />
+          </DeferredSlide>
         </SwiperSlide>
       );
     }
+
+    if (item.attributes.ext === ".mp4") {
+      return (
+        <SwiperSlide key={`${id}-${idx}-video`} style={{ position: "relative" }}>
+          <CarouselVideo src={item?.attributes?.url} />
+        </SwiperSlide>
+      );
+    }
+
+    return (
+      <SwiperSlide key={`${id}-${idx}-image`} style={{ position: "relative" }}>
+        <ImageWithSkeleton
+          fill
+          sizes="(max-width: 830px) 100vw, 830px"
+          quality={90}
+          style={{ objectFit: "contain", maxHeight: "100%", zIndex: 1 }}
+          src={getMediaUrl(item, "carousel")}
+          alt={post?.attributes?.Title || ""}
+        />
+      </SwiperSlide>
+    );
   };
 
   return (
-    <>
-      <CarouselContainer
-        // aspectRatio={aspectRatio ? aspectRatio : "16/9"}
-        paddingTop={calcAspectRatio(aspectRatio)}
-        ref={ref}
-        id={id}
-        darkMode={darkMode}
-        margin={"0 0 10px 0"}
+    <CarouselContainer
+      paddingTop={calcAspectRatio(aspectRatio)}
+      ref={ref}
+      id={id}
+      darkMode={darkMode}
+      margin={"0 0 10px 0"}
+    >
+      <Swiper
+        modules={[Navigation, Pagination, Scrollbar, A11y]}
+        pagination={{ clickable: true }}
+        spaceBetween={0}
+        slidesPerView={1}
+        onSlideChange={(swiper) => setActiveIdx(swiper.activeIndex)}
+        style={{
+          position: "absolute",
+          top: 0,
+          width: "100%",
+          height: "100%",
+        }}
       >
-        <Swiper
-          modules={[Navigation, Pagination, Scrollbar, A11y]}
-          pagination={{ clickable: true }}
-          spaceBetween={0}
-          slidesPerView={1}
-          style={{
-            position: "absolute",
-            top: 0,
-            width: "100%",
-            height: "100%",
-          }}
-        >
-          {imgData?.map((item, idx) => {
-            return imageOrVideo(item, idx);
-          })}
-        </Swiper>
-      </CarouselContainer>
-      {/* <Flex width={"100%"} justifyContent={"start"} gap={"10px"}>
-        {" "}
-        <ArrowLeft
-          onClick={() =>
-            activeIdx === 0
-              ? setActiveIdx(imgData.length - 1)
-              : setActiveIdx(activeIdx - 1)
-          }
-        />
-        <ArrowRight
-          onClick={() =>
-            activeIdx === imgData.length - 1
-              ? setActiveIdx(0)
-              : setActiveIdx(activeIdx + 1)
-          }
-        />
-      </Flex> */}
-    </>
+        {imgData?.map((item, idx) => imageOrVideo(item, idx))}
+      </Swiper>
+    </CarouselContainer>
   );
 };
+
 const forwardCarousel = React.forwardRef(CarouselObj);
 export default forwardCarousel;
